@@ -516,7 +516,7 @@ async function aiGo(){
   const apiKey=localStorage.getItem('openai_api_key');
   
   if(apiKey){
-    // AI MODE — send to Claude via serverless function
+    // AI MODE — send to OpenAI via serverless function
     document.getElementById('aiPText').textContent='🤖 AI анализирует...';
     try{
       const resp=await fetch('/api/parse',{
