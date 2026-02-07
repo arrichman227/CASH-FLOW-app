@@ -217,7 +217,7 @@ body{font-family:'Nunito',-apple-system,sans-serif;background:var(--bg);color:va
 <div class="v h" id="v-settings">
 <div class="hd"><button class="bb" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><h1>Настройки</h1><div></div></div>
 <div class="stg"><div class="stl">AI обработка</div><div class="stc">
-<div class="sti" onclick="oS('apik')"><div class="stf"><div class="sto">🤖</div><span class="stn">API ключ Claude</span></div><div class="str"><span class="stv" id="sApiStatus">Не установлен</span><span style="color:var(--t4)">›</span></div></div>
+<div class="sti" onclick="oS('apik')"><div class="stf"><div class="sto">🤖</div><span class="stn">API ключ OpenAI</span></div><div class="str"><span class="stv" id="sApiStatus">Не установлен</span><span style="color:var(--t4)">›</span></div></div>
 </div></div>
 <div class="stg"><div class="stl">Данные</div><div class="stc">
 <div class="sti" onclick="go('categories')"><div class="stf"><div class="sto">📂</div><span class="stn">Категории</span></div><div class="str"><span style="color:var(--t4)">›</span></div></div>
@@ -269,10 +269,10 @@ body{font-family:'Nunito',-apple-system,sans-serif;background:var(--bg);color:va
 
 <!-- API Key sheet -->
 <div class="ov" id="ov-apik" onclick="cS('apik')"></div><div class="bs" id="apik"><div class="bh"></div>
-<div style="font-size:17px;font-weight:800;margin-bottom:8px">🤖 API ключ Claude</div>
-<div style="font-size:13px;color:var(--t3);margin-bottom:16px;line-height:1.5">Введите ваш ключ API от Anthropic для AI-обработки текстовых и голосовых запросов. Ключ хранится только на вашем устройстве.</div>
-<input class="adi" id="apiKeyInput" type="password" placeholder="sk-ant-..." style="width:100%;margin-bottom:12px">
-<div style="display:flex;gap:10px"><button class="cbx cc" style="flex:1" onclick="localStorage.removeItem('claude_api_key');document.getElementById('apiKeyInput').value='';cS('apik');updApiStatus();toast('Ключ удалён','ok')">Удалить</button><button class="cbx co2" style="flex:1" onclick="const k=document.getElementById('apiKeyInput').value.trim();if(k){localStorage.setItem('claude_api_key',k);cS('apik');updApiStatus();toast('Ключ сохранён','ok')}">Сохранить</button></div>
+<div style="font-size:17px;font-weight:800;margin-bottom:8px">🤖 API ключ OpenAI</div>
+<div style="font-size:13px;color:var(--t3);margin-bottom:16px;line-height:1.5">Введите ваш API ключ от OpenAI для AI-обработки текстовых и голосовых запросов. Ключ хранится только на вашем устройстве.</div>
+<input class="adi" id="apiKeyInput" type="password" placeholder="sk-proj-..." style="width:100%;margin-bottom:12px">
+<div style="display:flex;gap:10px"><button class="cbx cc" style="flex:1" onclick="localStorage.removeItem('openai_api_key');document.getElementById('apiKeyInput').value='';cS('apik');updApiStatus();toast('Ключ удалён','ok')">Удалить</button><button class="cbx co2" style="flex:1" onclick="const k=document.getElementById('apiKeyInput').value.trim();if(k){localStorage.setItem('openai_api_key',k);cS('apik');updApiStatus();toast('Ключ сохранён','ok')}">Сохранить</button></div>
 </div>
 
 <div class="co" id="cfO"><div class="cob"><div class="cot" id="cfT"></div><div class="cod" id="cfD"></div><div class="cbs"><button class="cbx cc" onclick="cfX()">Отмена</button><button class="cbx cd" id="cfB">Удалить</button></div></div></div>
@@ -431,10 +431,10 @@ function fD(d){const t=new Date(),y=new Date(t);y.setDate(y.getDate()-1);d=new D
 function fT(d){d=new Date(d);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
 
 function go(v){document.querySelectorAll('.v').forEach(e=>e.classList.add('h'));document.getElementById('v-'+v).classList.remove('h');document.querySelectorAll('.tb-b[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===v));cV=v;({home:rH,history:rHi,analytics:rA,settings:()=>{},budget:rB,categories:rCa,accounts:rAc})[v]?.();}
-function oS(id){document.getElementById('ov-'+id).classList.add('on');document.getElementById(id).classList.add('on');if(id==='as')iAS();if(id==='ps')iPS();if(id==='ai')iAI();if(id==='apik'){const k=localStorage.getItem('claude_api_key')||'';document.getElementById('apiKeyInput').value=k;}}
+function oS(id){document.getElementById('ov-'+id).classList.add('on');document.getElementById(id).classList.add('on');if(id==='as')iAS();if(id==='ps')iPS();if(id==='ai')iAI();if(id==='apik'){const k=localStorage.getItem('openai_api_key')||'';document.getElementById('apiKeyInput').value=k;}}
 function cS(id){document.getElementById('ov-'+id).classList.remove('on');document.getElementById(id).classList.remove('on');if(id==='ai'&&isR)stV();}
 
-function updApiStatus(){const k=localStorage.getItem('claude_api_key');document.getElementById('sApiStatus').textContent=k?'Установлен ✓':'Не установлен';}
+function updApiStatus(){const k=localStorage.getItem('openai_api_key');document.getElementById('sApiStatus').textContent=k?'Установлен ✓':'Не установлен';}
 
 // ═══════ HOME ═══════
 function rH(){
@@ -497,7 +497,7 @@ return tx;}
 
 // ═══════ AI + VOICE ═══════
 function iAI(){
-  const k=localStorage.getItem('claude_api_key');
+  const k=localStorage.getItem('openai_api_key');
   const badge=document.getElementById('aiModeBadge');
   if(k){badge.className='ai-mode-badge active';badge.textContent='🤖 AI обработка включена';}
   else{badge.className='ai-mode-badge inactive';badge.textContent='⚡ Локальная обработка';}
@@ -513,7 +513,7 @@ async function aiGo(){
   document.getElementById('aiS').disabled=true;
   document.getElementById('aiP').classList.add('on');
   
-  const apiKey=localStorage.getItem('claude_api_key');
+  const apiKey=localStorage.getItem('openai_api_key');
   
   if(apiKey){
     // AI MODE — send to Claude via serverless function

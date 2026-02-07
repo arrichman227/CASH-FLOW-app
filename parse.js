@@ -10,80 +10,66 @@ export default async function handler(req, res) {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const systemPrompt = `You are a financial transaction parser for a Russian-language personal finance app. 
+  const systemPrompt = `You are a financial transaction parser for a Russian-language personal finance app.
 Given user input (text or transcribed voice), extract transaction details and return ONLY valid JSON.
 
 Categories for expenses:
-- food (Еда 🍔): еда, обед, завтрак, ужин, кофе, ресторан, кафе, пицца, продукты, магазин, доставка
-- transport (Транспорт 🚗): такси, метро, автобус, бензин, каршеринг, парковка, самокат
-- shopping (Покупки 🛍️): одежда, обувь, техника, электроника, маркетплейс
-- ent (Развлечения 🎬): кино, театр, концерт, игры, подписка, бар, клуб
-- health (Здоровье 💊): аптека, лекарства, врач, спортзал, фитнес
-- housing (Жильё 🏠): аренда, квартира, коммуналка, жкх, ремонт, ипотека, интернет
-- personal (Личное 👤): красота, парикмахерская, косметика, образование, курсы, книги
-- travel (Путешествия ✈️): перелёт, отель, билеты, экскурсия, тур
-- oexp (Прочее 📦): anything else for expenses
+- food (Еда): еда, обед, завтрак, ужин, кофе, ресторан, кафе, пицца, продукты, магазин, доставка
+- transport (Транспорт): такси, метро, автобус, бензин, каршеринг, парковка, самокат
+- shopping (Покупки): одежда, обувь, техника, электроника, маркетплейс
+- ent (Развлечения): кино, театр, концерт, игры, подписка, бар, клуб
+- health (Здоровье): аптека, лекарства, врач, спортзал, фитнес
+- housing (Жильё): аренда, квартира, коммуналка, жкх, ремонт, ипотека, интернет
+- personal (Личное): красота, парикмахерская, косметика, образование, курсы
+- travel (Путешествия): перелёт, отель, билеты, экскурсия, тур
+- oexp (Прочее): anything else
 
 Categories for income:
-- salary (Зарплата 💰): зарплата, зп, аванс, оклад
-- freelance (Фриланс 💻): фриланс, заказ, проект, подработка
-- gifts (Подарки 🎁): подарок, подарили, получил
-- oinc (Прочее 💵): доход, кэшбэк, возврат, дивиденды
+- salary (Зарплата): зарплата, зп, аванс, оклад
+- freelance (Фриланс): фриланс, заказ, проект, подработка
+- gifts (Подарки): подарок, подарили, получил
+- oinc (Прочее): доход, кэшбэк, возврат, дивиденды
 
-Today's date: ${today}
+Today: ${today}
 
-Return ONLY this JSON format, no extra text:
-{
-  "type": "expense" or "income",
-  "amount": number,
-  "category": "category_id",
-  "categoryName": "Русское название",
-  "categoryIcon": "emoji",
-  "description": "Краткое описание на русском",
-  "account": "cash" or "card",
-  "date": "YYYY-MM-DD"
-}
+Return ONLY raw JSON, no markdown, no backticks:
+{"type":"expense","amount":0,"category":"food","categoryName":"Еда","categoryIcon":"🍔","description":"Описание","account":"cash","date":"${today}"}
 
-Rules:
-- If user mentions "картой"/"карта" → account: "card", otherwise "cash"
-- If user mentions "вчера" → subtract 1 day from today
-- If user mentions "позавчера" → subtract 2 days
-- Amount must be positive number
-- If you can't determine amount, set amount: 0
-- Description should be clean and concise in Russian
-- Default type is "expense" unless clearly income-related`;
+Rules: "картой" -> account:"card", "вчера" -> date minus 1 day, default type is "expense"`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'Authorization': 'Bearer ' + apiKey
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: text }],
-        system: systemPrompt
+        model: 'gpt-4o-mini',
+        max_tokens: 200,
+        temperature: 0,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ]
       })
     });
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: `API error: ${err}` });
+      return res.status(response.status).json({ error: err });
     }
 
     const data = await response.json();
-    const content = data.content[0].text;
+    const content = data.choices[0].message.content;
 
-    // Extract JSON from response
     let parsed;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+      const clean = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : clean);
     } catch (e) {
-      return res.status(422).json({ error: 'Failed to parse AI response', raw: content });
+      return res.status(422).json({ error: 'Parse failed', raw: content });
     }
 
     return res.status(200).json(parsed);
